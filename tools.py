@@ -3,7 +3,7 @@ from pybricks.hubs import EV3Brick
 from pybricks.parameters import *
 from pybricks.tools import *
 from pybricks.ev3devices import *
-from math import cos, sin, radians, pi, degrees, average
+from math import cos, sin, tan, radians, pi, degrees, average, sqrt
 
 class Area:
     def __init__(self):
@@ -64,8 +64,31 @@ class DBase:
         for area in self.active_areas:
             area.transfer(distance, angle_shift)
 
-    def topos(self, pos, speed = 500, area_N = 0):
-        '''move to position'''
+    def topos(self, pos: tuple, speed = 500, area_N = 0):
+        '''move to position (x, y)'''
+
+        # aktuální pozice
+        x1 = self.active_areas[area_N].x
+        y1 = self.active_areas[area_N].y
+
+        # nová pozice
+        x2 = pos[0]
+        y2 = pos[1]
+
+        # relativní pozice
+        dx = x2 - x1
+        dy = y2 - y1
+
+        distance = sqrt(dx**2 + dy**2)
+
+        angle1 = self.active_areas[area_N].angle
+        angle2 = tan(dy, dx)
+
+        dangle = angle2 - angle1
+
+        # TODO: fce "jeď dopředu" a fce "otoč se o daný úhel"
+        # TODO: zakomponovat tyhle dvě fce do fce topos
+
 
     def move_pen_up(self):
         if not self.is_pen_up:
