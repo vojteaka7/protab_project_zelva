@@ -12,8 +12,8 @@ class Area:
         self.points = []
 
     def transfer(self, distance, angle_shift):
-        self.x += distance * cos(angle_shift + self.angle)
-        self.y += distance * sin(angle_shift + self.angle)
+        self.x += distance * cos(radians(angle_shift + self.angle))
+        self.y += distance * sin(radians(angle_shift + self.angle))
         self.angle += angle_shift
 
     def set_pos(self, x, y, angle):
@@ -22,9 +22,7 @@ class Area:
         self.angle = angle
 
     def reset(self):
-        self.x = 0
-        self.y = 0
-        self.angle = 0
+        self.set_pos(0, 0, 0)
 
 class BetterMotor(Motor):
     def __init__(self, port, positive_direction=True):
@@ -41,12 +39,14 @@ class BetterMotor(Motor):
         super().reset_angle(angle * (1 if self.positive_direction else -1))
 
 class DBase:
-    def __init__(self, hub: EV3Brick, Lw: BetterMotor, Rw: BetterMotor, wheel_radius: float, axle_track: float):
+    def __init__(self, hub: EV3Brick, Lw: BetterMotor, Rw: BetterMotor, Pw: BetterMotor, wheel_radius=22, axle_track=175):
         self.hub = hub
         self.Lw = Lw
         self.Rw = Rw
+        self.Pw = Pw # pen motor
         self.wheel_radius = wheel_radius
         self.axle_track = axle_track
+        self.is_pen_up = False
         self.active_areas = [Area(0, 0, 0)] #those are areas where the position is tracked
         
     def set_pos(self, x, y, angle, area_N = 0):
@@ -64,8 +64,14 @@ class DBase:
         for area in self.active_areas:
             area.transfer(distance, angle_shift)
 
+    def topos(self, pos, speed = 500, area_N = 0):
+        '''move to position'''
 
-
-    def stop(self):
-        self.left_motor.stop()
-        self.right_motor.stop()
+    def move_pen_up(self):
+        if not self.is_pen_up:
+            self.Pw.run_angle(500, 20)
+    
+    def move_pen_down(self):
+        if self.is_pen_up:
+            self.Pw.run_angle(500, -20)
+        
