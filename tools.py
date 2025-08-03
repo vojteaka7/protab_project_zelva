@@ -6,29 +6,65 @@ from pybricks.ev3devices import *
 from math import cos, sin, radians, pi, degrees, average
 
 class Area:
-    def __init__(self, x, y, angle):
-        self.x = x
-        self.y = y
-        self.anlge = angle
+    def __init__(self):
+        self.reset()
         self.magnification = 1.0
         self.points = []
 
     def transfer(self, distance, angle_shift):
         self.x += distance * cos(angle_shift + self.angle)
-        self.y += distance * sin(angle_shift + self.anlge)
+        self.y += distance * sin(angle_shift + self.angle)
+        self.angle += angle_shift
+
+    def set_pos(self, x, y, angle):
+        self.x = x
+        self.y = y
+        self.angle = angle
+
+    def reset(self):
+        self.x = 0
+        self.y = 0
+        self.angle = 0
+
+class BetterMotor(Motor):
+    def __init__(self, port, positive_direction=True):
+        super().__init__(port, positive_direction)
+        self.mangle = 0
+        self.reset_angle(0)
+
+    def angle_shift(self):
+        shift = self.angle() - self.mangle
+        self.mangle = self.angle()
+        return shift
+
+    def reset_angle(self, angle):
+        super().reset_angle(angle * (1 if self.positive_direction else -1))
 
 class DBase:
-    def __init__(self, ev3: EV3Brick):
-        self.ev3 = ev3
-        self.left_motor = Motor(Port.B)
-        self.right_motor = Motor(Port.C)
-        self.color_sensor = ColorSensor(Port.S1)
-        self.gyro_sensor = GyroSensor(Port.S2)
-        self.touch_sensor = TouchSensor(Port.S3)
+    def __init__(self, hub: EV3Brick, Lw: BetterMotor, Rw: BetterMotor, wheel_radius: float, axle_track: float):
+        self.hub = hub
+        self.Lw = Lw
+        self.Rw = Rw
+        self.wheel_radius = wheel_radius
+        self.axle_track = axle_track
+        self.active_areas = [Area(0, 0, 0)] #those are areas where the position is tracked
+        
+    def set_pos(self, x, y, angle, area_N = 0):
+        """for manual locate
+        area_N: 0 ... main area"""
+        self.active_areas[area_N].set_pos(x, y, angle)
 
-    def drive(self, speed, turn_rate):
-        self.left_motor.run(speed - turn_rate)
-        self.right_motor.run(speed + turn_rate)
+    def track(self):
+        angle = abs(self.Lw.angle_shift() - self.Rw.angle_shift()) * self.wheel_radius / self.axle_track
+        distance = (self.Lw.angle_shift() + self.Rw.angle_shift()) * self.wheel_radius * pi
+        return distance, angle
+
+    def locate(self):
+        distance, angle_shift = self.track()
+        for area in self.active_areas:
+            area.transfer(distance, angle_shift)
+
+
 
     def stop(self):
         self.left_motor.stop()
