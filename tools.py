@@ -4,7 +4,7 @@ from pybricks.parameters import *
 from pybricks.tools import *
 from pybricks.ev3devices import *
 from pybricks.robotics import *
-from math import cos, sin, tan, radians, pi, degrees, sqrt
+from math import cos, sin, tan, radians, pi, degrees, sqrt, atan2
 
 class Area:
 
@@ -85,16 +85,23 @@ class DBase:
         distance = sqrt(dx**2 + dy**2)
 
         angle1 = self.active_areas[area_N].angle
-        angle2 = degrees(tan(dy, dx))
+        angle2 = degrees(atan2(dy, dx))
 
         dangle = angle2 - angle1
 
-        if dangle > 180:
+        if dangle < 180:
             self.rotate(dangle)
+            self.hub.speaker.say(str(dangle) + "degrees")
         else:
-            self.rotate(360 - dangle)
+            self.rotate(dangle - 360)
+            self.hub.speaker.say(str(dangle - 360) + "degrees")
 
         self.drive_forward(distance)
+        self.hub.speaker.say(str(distance) + "milimetres")
+    
+    def visit_points(self, area_N = 0):
+        for bod in self.active_areas[area_N].points:
+            self.topos(bod, area_N = area_N)
 
 
     def drive_forward(self, distance, speed = 500):
@@ -104,8 +111,8 @@ class DBase:
     
     def rotate(self, target_angle, speed = 500):
         wheel_angle = ( self.axle_track * target_angle ) / ( self.wheel_radius * 2 )
-        self.Lw.run_angle(speed, wheel_angle, wait=False)
-        self.Rw.run_angle(speed, -wheel_angle)
+        self.Rw.run_angle(speed, wheel_angle, wait=False)
+        self.Lw.run_angle(speed, -wheel_angle)
 
     def move_pen_up(self):
         if not self.is_pen_up:
@@ -116,3 +123,17 @@ class DBase:
         if self.is_pen_up:
             self.Pw.run_angle(500, -20)
             self.is_pen_up = False
+
+if __name__ == "__main__":
+    hub = EV3Brick()
+    lm = BetterMotor(Port.A)
+    rm = BetterMotor(Port.B)
+    pm = BetterMotor(Port.C)
+
+
+    a = Area()
+    a.points = [(0, 200), (200, 200), (200, 0), (0, 0)]
+    driver = DBase(hub, lm, rm, pm)
+    driver.active_areas.append(a)
+
+    driver.visit_points(1)
