@@ -109,7 +109,7 @@ class Area:
         self.set_pos(0, 0, 0)
 
 class BetterMotor(Motor):
-    def __init__(self, port, positive_direction=True):
+    def __init__(self, port, positive_direction=Direction.CLOCKWISE):
         super().__init__(port, positive_direction)
         self.mangle = 0
         self.reset_angle(0)
@@ -325,3 +325,11 @@ class DBase:
                 self.motor_braker(stop)
                 #print(stop, self.x, self.y)
                 break
+
+hub = EV3Brick()
+Lw = BetterMotor(Port.A)
+Rw = BetterMotor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
+Pw = BetterMotor(Port.C)  
+drive = DBase(hub, Lw, Rw, Pw)
+hub.speaker.beep(1000, 1000)
+drive.straight_position(100, 0, 1)
