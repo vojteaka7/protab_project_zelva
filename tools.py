@@ -133,6 +133,8 @@ class DBase:
         self.axle_track = axle_track
         self.is_pen_up = False
         self.active_areas = [Area(), Area()] #those are areas where the position is tracked
+        self.acceleration = acceleration  # in m/s^2
+        self.deceleration = deceleration  # in m/s^2
         
     def set_pos(self, x, y, angle, area_N = 0):
         """for manual locate
@@ -316,13 +318,8 @@ class DBase:
             self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
             self.motor_driver(self.L_speed, self.R_speed)
 
-            if task:
-                task()
-            if self.extra_task:
-                self.extra_task()
-
             #motor breaker
-            if abs(self.local_x) > abs(distance) or self.interupt: 
+            if abs(self.active_areas[1].x) > abs(distance): 
                 self.motor_braker(stop)
                 #print(stop, self.x, self.y)
                 break
