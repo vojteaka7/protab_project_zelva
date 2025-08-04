@@ -89,7 +89,13 @@ class DBase:
 
         dangle = angle2 - angle1
 
-        # TODO: zakomponovat tyhle dvě fce do fce topos
+        if dangle > 180:
+            self.rotate(dangle)
+        else:
+            self.rotate(360 - dangle)
+
+        self.drive_forward(distance)
+
 
     def drive_forward(self, distance, speed = 500):
         angle = (distance * 360) / (2 * pi * self.wheel_radius)
