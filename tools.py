@@ -106,7 +106,7 @@ class DBase:
         if self.is_pen_up:
             self.Pw.run_angle(500, -20)
         
-if __name__ = "__main__":
+if __name__ == "__main__":
     hub = EV3Brick()
     levy_motor = BetterMotor(Port.A)
     pravy_motor = BetterMotor(Port.B)
