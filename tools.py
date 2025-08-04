@@ -267,9 +267,9 @@ class DBase:
     
     #fatal danger!!!
     def speed_calculator(self, motor_angle, speed, terminal_speed, g_cons, corector_cons):
-        new_speed = self.accelerator(self.local_avr_motor_angle, motor_angle, speed, initial_speed=self.avr_initial_speed, terminal_speed=terminal_speed)
-        gyro_corection = self.local_orientation * g_cons
-        shift_corection = self.local_y * corector_cons
+        new_speed = self.accelerator(self.Lw.angle() - self.start_motor_angle, motor_angle, speed, initial_speed=self.average_motor_speed, terminal_speed=terminal_speed)
+        gyro_corection = self.active_areas[1].angle * g_cons
+        shift_corection = self.active_areas[1].y * corector_cons
         self.L_speed = new_speed + gyro_corection + shift_corection
         self.R_speed = new_speed - gyro_corection - shift_corection  
         #print(new_speed, ";", self.L_speed, ";", self.R_speed)
@@ -299,6 +299,7 @@ class DBase:
         direction = clamp(direction, 1, -1)
         x_shift = (x - self.active_areas[Area_N].x)*direction
         y_shift = (y - self.y)
+        self.start_motor_angle = self.Lw.angle()
         #print(self.x, self.y, x_shift, y_shift)
         
         #trajectory calculator
@@ -312,6 +313,7 @@ class DBase:
             return None 
         motor_angle = (distance*360/ (2*pi*self.wheel_radius))
         self.active_areas[1].set_pos(0, 0, track_angle)
+        self.average_motor_speed = (self.Lw.speed() + self.Rw.speed()) / 2
 
         while True:
             self.locate()
