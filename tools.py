@@ -72,8 +72,7 @@ class DBase:
         y1 = self.active_areas[area_N].y
 
         # nová pozice
-        x2 = pos[0]
-        y2 = pos[1]
+        x2, y2 = pos
 
         # relativní pozice
         dx = x2 - x1
@@ -82,13 +81,22 @@ class DBase:
         distance = sqrt(dx**2 + dy**2)
 
         angle1 = self.active_areas[area_N].angle
-        angle2 = tan(dy, dx)
+        angle2 = degrees(tan(dy, dx))
 
         dangle = angle2 - angle1
 
         # TODO: fce "jeď dopředu" a fce "otoč se o daný úhel"
         # TODO: zakomponovat tyhle dvě fce do fce topos
 
+    def drive_forward(self, distance, speed = 500):
+        angle = (distance * 360) / (2 * pi * self.wheel_radius)
+        self.Lw.run_angle(speed, angle)
+        self.Rw.run_angle(speed, angle)
+    
+    def rotate(self, target_angle, speed = 500):
+        wheel_angle = ( self.axle_track * target_angle ) / self.wheel_radius
+        self.Lw.run_angle(speed, wheel_angle)
+        self.Rw.run_angle(speed, -wheel_angle)
 
     def move_pen_up(self):
         if not self.is_pen_up:
@@ -98,3 +106,25 @@ class DBase:
         if self.is_pen_up:
             self.Pw.run_angle(500, -20)
         
+if __name__ = "__main__":
+    hub = EV3Brick()
+    levy_motor = BetterMotor(Port.A)
+    pravy_motor = BetterMotor(Port.B)
+    maly_motor = BetterMotor(Port.C)
+
+
+    driver = DBase(hub, levy_motor, pravy_motor, maly_motor)
+
+    hub.speaker.say("move pen up")
+    driver.move_pen_up()
+
+    hub.speaker.say("move pen down")
+    driver.move_pen_down()
+
+    hub.speaker.say("drive forward 100")
+    driver.drive_forward(100)
+
+    hub.speaker.say("rotate 90 degrees")
+    driver.rotate(90)
+
+    hub.speaker.say("end of test")
