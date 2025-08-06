@@ -95,9 +95,10 @@ class Area:
         self.points = []
 
     def transfer(self, distance, angle_shift):
-        self.x += distance * cos(radians(angle_shift + self.angle))
-        self.y += distance * sin(radians(angle_shift + self.angle))
         self.angle += angle_shift
+        self.x += distance * cos(radians(self.angle))
+        print(self.angle)
+        self.y += distance * sin(radians(self.angle))
         return self.x, self.y, self.angle
 
     def set_pos(self, x, y, angle):
@@ -110,17 +111,16 @@ class Area:
 
 class BetterMotor(Motor):
     def __init__(self, port, positive_direction=Direction.CLOCKWISE):
-        super().__init__(port, positive_direction)
         self.mangle = 0
         self.reset_angle(0)
+        self.positive_direction = positive_direction
+        super().__init__(port, positive_direction)
+        
 
     def angle_shift(self):
         shift = self.angle() - self.mangle
         self.mangle = self.angle()
         return shift
-
-    def reset_angle(self, angle):
-        super().reset_angle(angle * (1 if self.positive_direction else -1))
 
 class DBase:
     def __init__(self, hub: EV3Brick, Lw: BetterMotor, Rw: BetterMotor, Pw: BetterMotor, wheel_radius=22, axle_track=175, acceleration: float = 1, 
@@ -135,6 +135,10 @@ class DBase:
         self.active_areas = [Area(), Area()] #those are areas where the position is tracked
         self.acceleration = acceleration  # in m/s^2
         self.deceleration = deceleration  # in m/s^2
+        self.Lw.mangle = 0
+        self.Rw.mangle = 0
+        self.Lw.reset_angle(0)
+        self.Rw.reset_angle(0)
         
     def set_pos(self, x, y, angle, area_N = 0):
         """for manual locate
@@ -142,8 +146,12 @@ class DBase:
         self.active_areas[area_N].set_pos(x, y, angle)
 
     def track(self):
-        angle = abs(self.Lw.angle_shift() - self.Rw.angle_shift()) * self.wheel_radius / self.axle_track
-        distance = (self.Lw.angle_shift() + self.Rw.angle_shift()) * self.wheel_radius * pi
+        Lw_angle_shift = self.Lw.angle() - self.Lw.mangle
+        Rw_angle_shift = self.Rw.angle() - self.Rw.mangle
+        self.Lw.mangle = self.Lw.angle()
+        self.Rw.mangle = self.Rw.angle()
+        angle = (Lw_angle_shift - Rw_angle_shift) * self.wheel_radius / self.axle_track
+        distance = (Lw_angle_shift + Rw_angle_shift) * self.wheel_radius * pi
         return distance, angle
 
     def locate(self):
@@ -298,8 +306,10 @@ class DBase:
         start_angle = self.active_areas[Area_N].angle
         direction = clamp(direction, 1, -1)
         x_shift = (x - self.active_areas[Area_N].x)*direction
-        y_shift = (y - self.y)
+        y_shift = (y - self.active_areas[Area_N].y)
         self.start_motor_angle = self.Lw.angle()
+        print("navigation running")
+        print("to travel: ", x_shift, y_shift, "  direction: ", direction)
         #print(self.x, self.y, x_shift, y_shift)
         
         #trajectory calculator
@@ -317,6 +327,7 @@ class DBase:
 
         while True:
             self.locate()
+            print("actual position: ", self.active_areas[1].x, self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
             self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
             self.motor_driver(self.L_speed, self.R_speed)
 
@@ -324,12 +335,22 @@ class DBase:
             if abs(self.active_areas[1].x) > abs(distance): 
                 self.motor_braker(stop)
                 #print(stop, self.x, self.y)
+                print("task done", self.active_areas[1].x, distance)
                 break
 
+
 hub = EV3Brick()
-Lw = BetterMotor(Port.A)
-Rw = BetterMotor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
-Pw = BetterMotor(Port.C)  
+gyro1 = GyroSensor(Port.S1)
+gyro2 = GyroSensor(Port.S4)
+Lw = Motor(Port.A)
+Rw = Motor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
+Pw = Motor(Port.C)  
+hub.speaker.beep(1000, 200)
+
 drive = DBase(hub, Lw, Rw, Pw)
-hub.speaker.beep(1000, 1000)
+while True:
+    #print(drive.track())
+    drive.locate()
+    #print(drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
+print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
 drive.straight_position(100, 0, 1)
