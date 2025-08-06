@@ -281,7 +281,7 @@ class DBase:
         self.R_speed = new_speed - gyro_corection - shift_corection  
         #print(new_speed, ";", self.L_speed, ";", self.R_speed)
 
-    def straight_position(self, x: float, y: float, direction: int, terminal_speed: Number = 50, speed = 500, Area_N: int = 0):
+    def straight_position(self, x: float, y: float, direction: int = 1, terminal_speed: Number = 50, speed = 500, Area_N: int = 0):
         """
         extra precise straight movement
         
@@ -337,6 +337,18 @@ class DBase:
                 #print(stop, self.x, self.y)
                 print("task done", self.active_areas[1].x, distance)
                 break
+    
+
+    def forward(self, distance, area_N: int = 0, speed = 500):
+        # x1, y1 je kde jsem; x2, y2 je kam chci jít
+        angle = self.active_areas[area_N].angle
+        x1 = self.active_areas[area_N].x
+        y1 = self.active_areas[area_N].y
+
+        x2 = x1 + distance * sin(radians( 90 - angle ))
+        y2 = y1 + distance * sin(radians( angle ))
+
+        self.straight_position(x2, y2)
 
 
 hub = EV3Brick()
@@ -349,14 +361,4 @@ hub.speaker.beep(1000, 200)
 
 drive = DBase(hub, Lw, Rw, Pw)
 
-print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-drive.straight_position(200, 0, 1)
-drive.straight_position(200, 200, 1)
-drive.straight_position(0, 200, 1)
-drive.straight_position(0, 0, 1)
-
-#while True:
-#    #print(drive.track())
-#    drive.locate()
-#    print(drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-#    wait(10)
+drive.forward(2000)
