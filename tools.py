@@ -95,9 +95,8 @@ class Area:
         self.points = []
 
     def transfer(self, distance, angle_shift):
-        self.angle += angle_shift
+        self.angle -= angle_shift
         self.x += distance * cos(radians(self.angle))
-        print(self.angle)
         self.y += distance * sin(radians(self.angle))
         return self.x, self.y, self.angle
 
@@ -147,11 +146,11 @@ class DBase:
 
     def track(self):
         Lw_angle_shift = self.Lw.angle() - self.Lw.mangle
-        Rw_angle_shift = self.Rw.angle() - self.Rw.mangle
+        Rw_angle_shift = -self.Rw.angle() + self.Rw.mangle
         self.Lw.mangle = self.Lw.angle()
         self.Rw.mangle = self.Rw.angle()
-        angle = (Lw_angle_shift - Rw_angle_shift) * self.wheel_radius / self.axle_track
-        distance = (Lw_angle_shift + Rw_angle_shift) * self.wheel_radius * pi
+        angle = (-Rw_angle_shift + Lw_angle_shift) * self.wheel_radius / self.axle_track
+        distance = (Lw_angle_shift + Rw_angle_shift) * self.wheel_radius * pi / 360
         return distance, angle
 
     def locate(self):
@@ -299,7 +298,7 @@ class DBase:
         """
 
         #setup
-        g_cons = 20 # gyrocorector constant (its not recomended to set below 2 and above 50)
+        g_cons = 30 # gyrocorector constant (its not recomended to set below 2 and above 50)
         corector_cons = 10 * direction
         terminal_speed = clamp(terminal_speed, 1000, 50)
         stop = terminal_speed == 50
@@ -327,9 +326,10 @@ class DBase:
 
         while True:
             self.locate()
-            print("actual position: ", self.active_areas[1].x, self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
+            print("actual position: ", self.active_areas[0].x, self.active_areas[0].y, "  angle: ", self.active_areas[0].angle)
             self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
-            self.motor_driver(self.L_speed, self.R_speed)
+            #print("L_speed: ", self.L_speed, "  R_speed: ", self.R_speed, " X: ", self.active_areas[1].x, "  Y: ", self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
+            self.motor_driver(self.L_speed, - self.R_speed)
 
             #motor breaker
             if abs(self.active_areas[1].x) > abs(distance): 
@@ -348,9 +348,15 @@ Pw = Motor(Port.C)
 hub.speaker.beep(1000, 200)
 
 drive = DBase(hub, Lw, Rw, Pw)
-while True:
-    #print(drive.track())
-    drive.locate()
-    #print(drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
+
 print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-drive.straight_position(100, 0, 1)
+drive.straight_position(200, 0, 1)
+drive.straight_position(200, 200, 1)
+drive.straight_position(0, 200, 1)
+drive.straight_position(0, 0, 1)
+
+#while True:
+#    #print(drive.track())
+#    drive.locate()
+#    print(drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
+#    wait(10)
