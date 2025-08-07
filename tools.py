@@ -196,11 +196,13 @@ class DBase:
         # TODO: zakomponovat tyhle dvě fce do fce topos
 
     def move_pen_up(self):
+        print("pen up")
         if not self.is_pen_up:
             self.Pw.run_angle(500, 90)
             self.is_pen_up = True
     
     def move_pen_down(self):
+        print("pen down")
         if self.is_pen_up:
             self.Pw.run_angle(500, -100)
             self.is_pen_up = False
@@ -411,7 +413,8 @@ class DBase:
         - it uses the active_areas[area_N] to get the position and angle
         - it uses the speed parameter to set the speed of the robot
         """
-        n_area_N = self.len(self.active_areas) # this is used to get the index of the area
+        n_area_N = len(self.active_areas) # this is used to get the index of the area
+        print(area)
         self.active_areas.append(area)
         self.locate()
         self.active_areas[n_area_N].dir_reset(self.active_areas[0].angle) #not shure
@@ -424,19 +427,21 @@ class DBase:
                 self.move_pen_down()
             else:
                 print("Unknown instruction: ", instruction)
-        self.
+        self.active_areas[n_area_N].reset()
+        self.active_areas.pop()  # remove the area after finishing the instructions
 
-    def area_driver(self, areas_data: list, speed = 500):
+    def set_driver(self, areas_data: list, speed = 500):
         """
         - this function is used to drive the robot in the area
         - it uses the active_areas[area_N] to get the position and angle
         - it uses the speed parameter to set the speed of the robot
         areas_with_data: 0 - area; 1 - magnification
         """
-        for area_data in areas_with_data:
-            self.straight_position(area_data[0][0], area_data[0][1], 1, Area_N=area_data[0])
-            self.area_driver(areas_data[1], areas_data[2], speed)
-            self.active_areas.pop()
+        for area_data in areas_data:
+            print(areas_data)
+            print(area_data)
+            self.straight_position(area_data[0][0], area_data[0][1], 1)
+            self.area_driver(area_data[1], area_data[2])
 
 #areas
 letter_P = Area()
@@ -458,8 +463,8 @@ letter_B = Area()
 letter_B.instructions = ["down", [0, 20], [10, 15], [10, 10], [10, 5], [0, 0], "up"]
 
 #Area nistruction set
-mag = 10
-protab_set = [[0 * mag, 0 * mag], letter_P, mag, [20 * mag, 0 * mag], letter_R, mag, [40 * mag, 0 * mag], letter_O, mag, [60 * mag, 0 * mag], letter_T, mag, [80 * mag, 0 * mag], letter_A, mag, [100 * mag, 0 * mag], letter_B, mag]
+mag = 5
+protab_set = [[[0 * mag, 0 * mag], letter_P, mag], [[20 * mag, 0 * mag], letter_R, mag], [[40 * mag, 0 * mag], letter_O, mag], [[60 * mag, 0 * mag], letter_T, mag], [[80 * mag, 0 * mag], letter_A, mag], [[100 * mag, 0 * mag], letter_B, mag]]
 
 #inicialization
 hub = EV3Brick()
@@ -474,7 +479,7 @@ drive = DBase(hub, Lw, Rw, Pw)
 drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
-drive.area_driver(protab_set, speed=500)
+drive.set_driver(protab_set, speed=500)
 
 #print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
 #drive.move_pen_up()
