@@ -122,7 +122,7 @@ class DBase:
         self.Pw = Pw # pen motor
         self.wheel_radius = wheel_radius
         self.axle_track = axle_track
-        self.is_pen_up = False
+        self.is_pen_up = True
         self.active_areas = [Area(), Area()] #those are areas where the position is tracked
         self.acceleration = acceleration  # in m/s^2
         self.deceleration = deceleration  # in m/s^2
@@ -198,14 +198,13 @@ class DBase:
     def move_pen_up(self):
         print("pen up")
         if not self.is_pen_up:
-            self.Pw.run_angle(500, 90)
+            self.Pw.run_angle(500, -180)
             self.is_pen_up = True
     
     def move_pen_down(self):
         print("pen down")
         if self.is_pen_up:
-            self.Pw.run_angle(500, -90)
-            self.Pw.dc(-25)
+            self.Pw.run_angle(500, 180)
             self.is_pen_up = False
 
     def motor_driver(self, L_speed: float, R_speed: float):
@@ -445,27 +444,85 @@ class DBase:
             self.area_driver(area_data[1], area_data[2])
 
 #areas
-letter_P = Area()
-letter_P.instructions = ["down", [0, 10], [0, 20], [10, 15], [0, 10], "up"]
+#alfabet
+A = Area()
+A.instructions = ["down", [0, 20], [10, 20], [10, 0], [10, 10], [0, 10], "up"]
 
-letter_R = Area()
-letter_R.instructions = ["down", [0, 10], [0, 20], [10, 15], [0, 10], [10, 0], "up"]
+B = Area()
+B.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 5], [0, 0], "up"]
 
-letter_O = Area()
-letter_O.instructions = ["down", [0, 20], [10, 20], [20, 10], [0, 0], "up"]
+C = Area()
+C.instructions = [[10, 0], "down", [0, 0], [0, 20], [10, 20], "up"]
 
-letter_T = Area()
-letter_T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up"]
+D = Area()
+D.instructions = ["down", [0, 20], [10, 15], [10, 5], [0, 0], "up"]
 
-letter_A = Area()
-letter_A.instructions = ["down", [0, 20], [10, 20], [10, 10], [0, 10], [10, 10], [10, 0], "up"]
+E = Area()
+E.instructions = ["down", [10, 0], [0, 0], [0, 10], [10, 10], [0, 10], [0, 20], [10, 20] "up"]
 
-letter_B = Area()
-letter_B.instructions = ["down", [0, 20], [10, 15], [10, 10], [10, 5], [0, 0], "up"]
+F = Area()
+F.instructions = ["down", [0, 10], [10, 10], [0, 20], [10, 20], "up"]
+
+G = Area()
+G.instructions = [[5, 10], "down", [10, 10], [10, 0], [0, 0], [0, 20], [10, 20], "up"]
+
+H = Area()
+H.instructions = ["down", [0, 20], [0, 10], [10, 10], [10, 20], [10, 0], "up"]
+
+I = Area()
+I.instructions = ["down", [10, 0], [5, 0], [5, 20], [0, 20], [10, 20], "up"]
+
+J = Area()
+J.instructions = [[0, 5], "down", [0, 0], [10, 0], [10, 20], [0, 20], "up"]
+
+K = Area()
+K.instructions = ["down", [0, 20], [0, 10], [10, 20], [0, 10], [10, 0], "up"]
+
+L = Area()
+L.instructions = [[0, 20], "down", [0, 0], [10, 0], "up"]
+
+M = Area()
+M.instructions = ["down", [0, 20], [5, 10], [10, 20], [10, 0], "up"]
+
+O = Area()
+O.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], "up"]
+
+P = Area()
+P.instructions = ["down", [0, 20], [10, 15], [0, 10], "up"]
+
+Q = Area()
+Q.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], [5, 0], [10, -5] "up"]
+
+R = Area()
+R.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 0], "up"]
+
+S = Area()
+S.instructions = ["down", [10, 0], [10, 10], [0, 10], [0, 20], [10, 20], "up"]
+
+T = Area()
+T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up"]
+
+U = Area()
+U.instructions = [[0, 20], "down", [0, 0], [10, 0], [10, 20], "up"]
+
+V = Area()
+V.instructions = [[0, 20], "down", [5, 0], [10, 20], "up"]
+
+W = Area()
+W.instructions = [[0, 20], "down", [2, 0], [5, 20], [8, 0], [10, 20], "up"]
+
+X = Area()
+X.instructions = ["down", [10, 20], "up", [0, 20], "down", [10, 0], "up"]
+
+Y = Area()
+Y.instructions = [[0, 20], "down", [5, 10], [5, 0], [5, 10], [10, 20], "up"]
+
+Z = Area()
+Z.instructions = [[0, 20], "down", [10, 20], [0, 0], [10, 0], "up"]
 
 #Area nistruction set
 mag = 5
-protab_set = [[[0 * mag, 0 * mag], letter_P, mag], [[20 * mag, 0 * mag], letter_R, mag], [[40 * mag, 0 * mag], letter_O, mag], [[60 * mag, 0 * mag], letter_T, mag], [[80 * mag, 0 * mag], letter_A, mag], [[100 * mag, 0 * mag], letter_B, mag]]
+protab_set = [[[0 * mag, 0 * mag], P, mag], [[20 * mag, 0 * mag], R, mag], [[40 * mag, 0 * mag], O, mag], [[60 * mag, 0 * mag], T, mag], [[80 * mag, 0 * mag], A, mag], [[100 * mag, 0 * mag], B, mag]]
 
 #inicialization
 hub = EV3Brick()
@@ -474,13 +531,16 @@ gyro2 = GyroSensor(Port.S4)
 Lw = Motor(Port.A)
 Rw = Motor(Port.B)
 Pw = Motor(Port.C)  
+mixer = Motor(Port.D)
 hub.speaker.beep(1000, 200)
+mixer.run(1000)
 
 drive = DBase(hub, Lw, Rw, Pw)
 drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
 drive.set_driver(protab_set, speed=500)
+#drive.area_driver(letter_B, 5, speed=500)
 
 #print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
 #drive.move_pen_up()
