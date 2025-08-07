@@ -136,7 +136,7 @@ class DBase:
     def add_gyro(self, gyro: GyroSensor):
         self.gyros.append(gyro)
 
-    def read_gyros(self, m_angle, odchlka=10):
+    def read_gyros(self, m_angle, odchlka=100):
         if self.gyros != []:
             for gyro in self.gyros:
                 g_angle = gyro.angle()
@@ -156,11 +156,11 @@ class DBase:
 
     def track(self):
         Lw_angle_shift = self.Lw.angle() - self.Lw.mangle
-        Rw_angle_shift = -self.Rw.angle() + self.Rw.mangle
+        Rw_angle_shift = self.Rw.angle() - self.Rw.mangle
         self.Lw.mangle = self.Lw.angle()
         self.Rw.mangle = self.Rw.angle()
         self.m_angle += (-Rw_angle_shift + Lw_angle_shift) * self.wheel_radius / self.axle_track
-        angle = reed_gyros(self.m_angle)
+        angle = self.read_gyros(self.m_angle)
         distance = (Lw_angle_shift + Rw_angle_shift) * self.wheel_radius * pi / 360
         return distance, angle
 
@@ -259,7 +259,6 @@ class DBase:
 
         return new_speed
     
-    #fatal danger!!!
     def speed_calculator(self, motor_angle, speed, terminal_speed, g_cons, corector_cons):
         new_speed = self.accelerator(self.Lw.angle() - self.start_motor_angle, motor_angle, speed, initial_speed=self.average_motor_speed, terminal_speed=terminal_speed)
         gyro_corection = self.active_areas[1].angle * g_cons
@@ -316,7 +315,7 @@ class DBase:
             print("actual position: ", self.active_areas[0].x, self.active_areas[0].y, "  angle: ", self.active_areas[0].angle)
             self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
             #print("L_speed: ", self.L_speed, "  R_speed: ", self.R_speed, " X: ", self.active_areas[1].x, "  Y: ", self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
-            self.motor_driver(self.L_speed, - self.R_speed)
+            self.motor_driver(self.L_speed, self.R_speed)
 
             #motor breaker
             if abs(self.active_areas[1].x) > abs(distance): 
@@ -330,12 +329,13 @@ hub = EV3Brick()
 gyro1 = GyroSensor(Port.S1)
 gyro2 = GyroSensor(Port.S4)
 Lw = Motor(Port.A)
-Rw = Motor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
+Rw = Motor(Port.B)
 Pw = Motor(Port.C)  
 hub.speaker.beep(1000, 200)
 
+
 drive = DBase(hub, Lw, Rw, Pw)
-dirve.add_gyro(gyro1)
+drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
 print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
