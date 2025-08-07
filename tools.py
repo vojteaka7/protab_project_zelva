@@ -92,7 +92,7 @@ class Area:
     def __init__(self):
         self.reset()
         self.magnification = 1.0
-        self.points = []
+        self.instructions = [] #this is a list of points and other driving insttuctions
         self.i_angle = 0
 
     def transfer(self, distance, angle):
@@ -405,7 +405,63 @@ class DBase:
 
         self.straight_position(x2, y2)
 
+    def area_driver(self, area: Area, magnification, speed = 500):
+        """
+        - this function is used to drive the robot in the area
+        - it uses the active_areas[area_N] to get the position and angle
+        - it uses the speed parameter to set the speed of the robot
+        """
+        n_area_N = self.len(self.active_areas) # this is used to get the index of the area
+        self.active_areas.append(area)
+        self.locate()
+        self.active_areas[n_area_N].dir_reset(self.active_areas[0].angle) #not shure
+        for instruction in self.active_areas[n_area_N].instructions:
+            if type(instruction) == list:
+                self.straight_position(instruction[0] * magnification, instruction[1] * magnification, 1, Area_N=n_area_N) #provizorní verze - nepotporuje komplexní instrukce
+            elif instruction == "up":
+                self.move_pen_up()
+            elif instruction == "down":
+                self.move_pen_down()
+            else:
+                print("Unknown instruction: ", instruction)
+        self.
 
+    def area_driver(self, areas_data: list, speed = 500):
+        """
+        - this function is used to drive the robot in the area
+        - it uses the active_areas[area_N] to get the position and angle
+        - it uses the speed parameter to set the speed of the robot
+        areas_with_data: 0 - area; 1 - magnification
+        """
+        for area_data in areas_with_data:
+            self.straight_position(area_data[0][0], area_data[0][1], 1, Area_N=area_data[0])
+            self.area_driver(areas_data[1], areas_data[2], speed)
+            self.active_areas.pop()
+
+#areas
+letter_P = Area()
+letter_P.instructions = ["down", [0, 10], [0, 20], [10, 15], [0, 10], "up"]
+
+letter_R = Area()
+letter_R.instructions = ["down", [0, 10], [0, 20], [10, 15], [0, 10], [10, 0], "up"]
+
+letter_O = Area()
+letter_O.instructions = ["down", [0, 20], [10, 20], [20, 10], [0, 0], "up"]
+
+letter_T = Area()
+letter_T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up"]
+
+letter_A = Area()
+letter_A.instructions = ["down", [0, 20], [10, 20], [10, 10], [0, 10], [10, 10], [10, 0], "up"]
+
+letter_B = Area()
+letter_B.instructions = ["down", [0, 20], [10, 15], [10, 10], [10, 5], [0, 0], "up"]
+
+#Area nistruction set
+mag = 10
+protab_set = [[0 * mag, 0 * mag], letter_P, mag, [20 * mag, 0 * mag], letter_R, mag, [40 * mag, 0 * mag], letter_O, mag, [60 * mag, 0 * mag], letter_T, mag, [80 * mag, 0 * mag], letter_A, mag, [100 * mag, 0 * mag], letter_B, mag]
+
+#inicialization
 hub = EV3Brick()
 gyro1 = GyroSensor(Port.S1)
 gyro2 = GyroSensor(Port.S4)
@@ -414,19 +470,20 @@ Rw = Motor(Port.B)
 Pw = Motor(Port.C)  
 hub.speaker.beep(1000, 200)
 
-
 drive = DBase(hub, Lw, Rw, Pw)
 drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
-print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-drive.move_pen_up()
-drive.move_pen_down()
-drive.straight_position(200, 0, 1)
-drive.straight_position(200, 200, 1)
-drive.straight_position(0, 200, 1)
-drive.straight_position(0, 0, 1)
-drive.move_pen_up()
+drive.area_driver(protab_set, speed=500)
+
+#print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
+#drive.move_pen_up()
+#drive.move_pen_down()
+#drive.straight_position(200, 0, 1)
+#drive.straight_position(200, 200, 1)
+#drive.straight_position(0, 200, 1)
+#drive.straight_position(0, 0, 1)
+#drive.move_pen_up()
 
 #while True:
 #    #print(drive.track())
