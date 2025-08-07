@@ -202,7 +202,8 @@ class DBase:
     
     def move_pen_down(self):
         if self.is_pen_up:
-            self.Pw.run_angle(500, -100)
+            self.Pw.run_angle(500, -90)
+            self.Pw.dc(-25)
             self.is_pen_up = False
 
     def motor_driver(self, L_speed: float, R_speed: float):
