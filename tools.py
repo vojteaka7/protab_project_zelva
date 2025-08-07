@@ -197,11 +197,13 @@ class DBase:
 
     def move_pen_up(self):
         if not self.is_pen_up:
-            self.Pw.run_angle(500, 20)
+            self.Pw.run_angle(500, 90)
+            self.is_pen_up = True
     
     def move_pen_down(self):
         if self.is_pen_up:
-            self.Pw.run_angle(500, -20)
+            self.Pw.run_angle(500, -100)
+            self.is_pen_up = False
 
     def motor_driver(self, L_speed: float, R_speed: float):
         """
@@ -356,10 +358,13 @@ drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
 print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-drive.straight_position(400, 0, 1)
-drive.straight_position(400, 400, 1)
-drive.straight_position(0, 400, 1)
+drive.move_pen_up()
+drive.move_pen_down()
+drive.straight_position(200, 0, 1)
+drive.straight_position(200, 200, 1)
+drive.straight_position(0, 200, 1)
 drive.straight_position(0, 0, 1)
+drive.move_pen_up()
 
 #while True:
 #    #print(drive.track())
