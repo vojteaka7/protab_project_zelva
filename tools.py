@@ -19,7 +19,7 @@ def avrg(*value: float):
     return avrg
 
 def angle_mod(value: float):
-    value = (value + 180) % 360 - 180
+    #value = (value + 180) % 360 - 180
     return value
 
 def clamp(value: float, maximum: float, minimum: float):
@@ -136,14 +136,15 @@ class DBase:
     def add_gyro(self, gyro: GyroSensor):
         self.gyros.append(gyro)
 
-    def read_gyros(self, m_angle, odchlka=100):
+    def read_gyros(self, m_angle, odchlka=1000):
+        angle = 0
         if self.gyros != []:
             for gyro in self.gyros:
                 g_angle = gyro.angle()
                 if abs(g_angle - m_angle) < odchlka:
-                    angle = g_angle
+                    angle += g_angle
                 else:
-                    angle = m_angle
+                    angle += m_angle
             return angle/len(self.gyros)
         else:
             return m_angle
@@ -159,7 +160,7 @@ class DBase:
         Rw_angle_shift = self.Rw.angle() - self.Rw.mangle
         self.Lw.mangle = self.Lw.angle()
         self.Rw.mangle = self.Rw.angle()
-        self.m_angle += (-Rw_angle_shift + Lw_angle_shift) * self.wheel_radius / self.axle_track
+        self.m_angle += (Rw_angle_shift - Lw_angle_shift) * self.wheel_radius / self.axle_track
         angle = self.read_gyros(self.m_angle)
         distance = (Lw_angle_shift + Rw_angle_shift) * self.wheel_radius * pi / 360
         return distance, angle
@@ -284,7 +285,7 @@ class DBase:
         """
 
         #setup
-        g_cons = 30 # gyrocorector constant (its not recomended to set below 2 and above 50)
+        g_cons = 20 # gyrocorector constant (its not recomended to set below 2 and above 50)
         corector_cons = 10 * direction
         terminal_speed = clamp(terminal_speed, 1000, 50)
         stop = terminal_speed == 50
@@ -294,7 +295,7 @@ class DBase:
         y_shift = (y - self.active_areas[Area_N].y)
         self.start_motor_angle = self.Lw.angle()
         print("navigation running")
-        print("to travel: ", x_shift, y_shift, "  direction: ", direction)
+        
         #print(self.x, self.y, x_shift, y_shift)
         
         #trajectory calculator
@@ -309,10 +310,14 @@ class DBase:
         motor_angle = (distance*360/ (2*pi*self.wheel_radius))
         self.active_areas[1].dir_reset(track_angle)
         self.average_motor_speed = (self.Lw.speed() + self.Rw.speed()) / 2
+        
+        self.locate()
+        print("to travel: ", x, y, " distance: ", distance, " ang: ", track_angle)
+        print("i_ang: ", self.active_areas[1].i_angle, "  angle1: ", self.active_areas[1].angle, "angle0: ", self.active_areas[0].angle)
 
         while True:
             self.locate()
-            print("actual position: ", self.active_areas[0].x, self.active_areas[0].y, "  angle: ", self.active_areas[0].angle)
+            #print("actual position: ", self.active_areas[0].x, self.active_areas[0].y, "  angle: ", self.active_areas[0].angle)
             self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
             #print("L_speed: ", self.L_speed, "  R_speed: ", self.R_speed, " X: ", self.active_areas[1].x, "  Y: ", self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
             self.motor_driver(self.L_speed, self.R_speed)
@@ -339,9 +344,9 @@ drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
 print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
-drive.straight_position(200, 0, 1)
-drive.straight_position(200, 200, 1)
-drive.straight_position(0, 200, 1)
+drive.straight_position(400, 0, 1)
+drive.straight_position(400, 400, 1)
+drive.straight_position(0, 400, 1)
 drive.straight_position(0, 0, 1)
 
 #while True:
