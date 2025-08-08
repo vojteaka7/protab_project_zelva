@@ -427,6 +427,7 @@ class DBase:
                 self.move_pen_down()
             else:
                 print("Unknown instruction: ", instruction)
+            self.hub.speaker.beep()
         self.active_areas[n_area_N].reset()
         self.active_areas.pop()  # remove the area after finishing the instructions
 
@@ -442,6 +443,7 @@ class DBase:
             print(area_data)
             self.straight_position(area_data[0][0], area_data[0][1], 1)
             self.area_driver(area_data[1], area_data[2])
+            self.hub.speaker.beep(1000, 200)
 
     def write(self, letters, mag):
         templates = []
@@ -453,85 +455,24 @@ class DBase:
 
 #areas
 #alfabet
-A = Area()
-A.instructions = ["down", [0, 20], [10, 20], [10, 0], [10, 10], [0, 10], "up"]
-
-B = Area()
-B.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 5], [0, 0], "up"]
-
-C = Area()
-C.instructions = [[10, 0], "down", [0, 0], [0, 20], [10, 20], "up"]
-
-D = Area()
-D.instructions = ["down", [0, 20], [10, 15], [10, 5], [0, 0], "up"]
-
-E = Area()
-E.instructions = ["down", [10, 0], [0, 0], [0, 10], [10, 10], [0, 10], [0, 20], [10, 20], "up"]
-
-F = Area()
-F.instructions = ["down", [0, 10], [10, 10], [0, 20], [10, 20], "up"]
-
-G = Area()
-G.instructions = [[5, 10], "down", [10, 10], [10, 0], [0, 0], [0, 20], [10, 20], "up"]
-
-H = Area()
-H.instructions = ["down", [0, 20], [0, 10], [10, 10], [10, 20], [10, 0], "up"]
-
-I = Area()
-I.instructions = ["down", [10, 0], [5, 0], [5, 20], [0, 20], [10, 20], "up"]
-
-J = Area()
-J.instructions = [[0, 5], "down", [0, 0], [10, 0], [10, 20], [0, 20], "up"]
-
-K = Area()
-K.instructions = ["down", [0, 20], [0, 10], [10, 20], [0, 10], [10, 0], "up"]
-
-L = Area()
-L.instructions = [[0, 20], "down", [0, 0], [10, 0], "up"]
-
-M = Area()
-M.instructions = ["down", [0, 20], [5, 10], [10, 20], [10, 0], "up"]
-
-N = Area()
-N.instructions = ["down", [0, 20], [10, 0], [10, 20], "up"]
-
-O = Area()
-O.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], "up"]
-
 P = Area()
-P.instructions = ["down", [0, 20], [10, 15], [0, 10], "up"]
-
-Q = Area()
-Q.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], [5, 0], [10, -5], "up"]
+P.instructions = ["down", [0, 30], [10, 25], [5, 20], "up"]
 
 R = Area()
-R.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 0], "up"]
+R.instructions = ["down", [0, 30], [10, 25], [5, 20], [20, 0], "up"]
 
-S = Area()
-S.instructions = ["down", [10, 0], [10, 10], [0, 10], [0, 20], [10, 20], "up"]
+O = Area()
+O.instructions = ["down", [0, 20], [10, 20], [10, 10], [5, 10], "up"]
 
 T = Area()
-T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up"]
+T.instructions = ["up", [0, 20], "down", [20, 20], "up", [17.5, 22], "down", [15, 0], "up"]
 
-U = Area()
-U.instructions = [[0, 20], "down", [0, 0], [10, 0], [10, 20], "up"]
+A = Area()
+A.instructions = ["down", [0, 20], [10, 20], [10, 0], "up", [15, 10], "down", [5, 10], "up"]
 
-V = Area()
-V.instructions = [[0, 20], "down", [5, 0], [10, 20], "up"]
+B = Area()
+B.instructions = ["down", [0, 20], [10, 15], [5, 10], [10, 5], [5, 0], "up"]
 
-W = Area()
-W.instructions = [[0, 20], "down", [2, 0], [5, 20], [8, 0], [10, 20], "up"]
-
-X = Area()
-X.instructions = ["down", [10, 20], "up", [0, 20], "down", [10, 0], "up"]
-
-Y = Area()
-Y.instructions = [[0, 20], "down", [5, 10], [5, 0], [5, 10], [10, 20], "up"]
-
-Z = Area()
-Z.instructions = [[0, 20], "down", [10, 20], [0, 0], [10, 0], "up"]
-
-abeceda = {"A": A, "B": B, "C": C, "D": D, "E": E, "F": F, "G": G, "H": H, "I": I, "J": J, "K": K, "L": L, "M": M, "N": N, "O": O, "P": P, "Q": Q, "R": R, "S": S, "T": T, "U": U, "V": V, "W": W, "X": X, "Y": Y, "Z": Z}
 #Area nistruction set
 mag = 5
 protab_set = [[[0 * mag, 0 * mag], P, mag], [[20 * mag, 0 * mag], R, mag], [[40 * mag, 0 * mag], O, mag], [[60 * mag, 0 * mag], T, mag], [[80 * mag, 0 * mag], A, mag], [[100 * mag, 0 * mag], B, mag]]
@@ -551,9 +492,9 @@ drive = DBase(hub, Lw, Rw, Pw)
 drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
-drive.write("EVE", 5)
-#drive.set_driver(protab_set, speed=500)
-#drive.area_driver(letter_B, 5, speed=500)
+# drive.write("EVE", 5)
+# drive.set_driver(protab_set, speed=500)
+drive.area_driver(A, 5, speed=500)
 
 #print("on position: ", drive.active_areas[0].x, drive.active_areas[0].y, "  angle: ", drive.active_areas[0].angle)
 #drive.move_pen_up()
