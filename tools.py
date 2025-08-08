@@ -378,6 +378,7 @@ class DBase:
                 self.move_pen_down()
             else:
                 print("Unknown instruction: ", instruction)
+            self.hub.speaker.beep()
         self.active_areas[n_area_N].reset()
         self.active_areas.pop()  # remove the area after finishing the instructions
 
@@ -484,7 +485,24 @@ Y.instructions = [[0, 20], "down", [5, 10], [5, 0], [5, 10], [10, 20], "up", [0,
 Z = Area()
 Z.instructions = [[0, 20], "down", [10, 20], [0, 0], [10, 0], "up", [0, 10]]
 
-abeceda = {"A": A, "B": B, "C": C, "D": D, "E": E, "F": F, "G": G, "H": H, "I": I, "J": J, "K": K, "L": L, "M": M, "N": N, "O": O, "P": P, "Q": Q, "R": R, "S": S, "T": T, "U": U, "V": V, "W": W, "X": X, "Y": Y, "Z": Z}
+P = Area()
+P.instructions = ["down", [0, 30], [10, 25], [5, 20], "up"]
+
+R = Area()
+R.instructions = ["down", [0, 30], [10, 25], [5, 20], [20, 0], "up"]
+
+O = Area()
+O.instructions = ["down", [0, 20], [10, 20], [10, 10], [5, 10], "up"]
+
+T = Area()
+T.instructions = ["up", [0, 20], "down", [20, 20], "up", [17.5, 22], "down", [15, 0], "up"]
+
+A = Area()
+A.instructions = ["down", [0, 20], [10, 20], [10, 0], "up", [15, 10], "down", [5, 10], "up"]
+
+B = Area()
+B.instructions = ["down", [0, 20], [10, 15], [5, 10], [10, 5], [5, 0], "up"]
+
 #Area nistruction set
 mag = 5
 protab_set = [[[0 * mag, 0 * mag], P, mag], [[20 * mag, 0 * mag], R, mag], [[40 * mag, 0 * mag], O, mag], [[60 * mag, 0 * mag], T, mag], [[80 * mag, 0 * mag], A, mag], [[100 * mag, 0 * mag], B, mag]]
