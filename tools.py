@@ -113,6 +113,9 @@ class Area:
         self.i_angle = i_angle
         self.reset()
 
+    def pos(self):
+        return self.x, self.y
+
 class DBase:
     def __init__(self, hub: EV3Brick, Lw: BetterMotor, Rw: BetterMotor, Pw: BetterMotor, wheel_radius=22, axle_track=175, acceleration: float = 1, 
         deceleration: float = 1):
@@ -294,7 +297,7 @@ class DBase:
 
         #setup
         g_cons = 20 # gyrocorector constant (its not recomended to set below 2 and above 50)
-        corector_cons = 10 * direction
+        corector_cons = 20 * direction
         terminal_speed = clamp(terminal_speed, 1000, 50)
         stop = terminal_speed == 50
         start_angle = self.active_areas[Area_N].angle
@@ -302,7 +305,7 @@ class DBase:
         x_shift = (x - self.active_areas[Area_N].x)*direction
         y_shift = (y - self.active_areas[Area_N].y)
         self.start_motor_angle = self.Lw.angle()
-        print("navigation running")
+        print("shifts: ", x_shift, y_shift, "gotto: ", [x, y], "on: ", self.active_areas[Area_N].pos())
         
         #print(self.x, self.y, x_shift, y_shift)
         
@@ -320,8 +323,8 @@ class DBase:
         self.average_motor_speed = (self.Lw.speed() + self.Rw.speed()) / 2
         
         self.locate()
-        print("to travel: ", x, y, " distance: ", distance, " ang: ", track_angle)
-        print("i_ang: ", self.active_areas[1].i_angle, "  angle1: ", self.active_areas[1].angle, "angle0: ", self.active_areas[0].angle)
+        #print("to travel: ", x, y, " distance: ", distance, " ang: ", track_angle)
+        #print("i_ang: ", self.active_areas[1].i_angle, "  angle1: ", self.active_areas[1].angle, "angle0: ", self.active_areas[0].angle)
 
         while True:
             self.locate()
@@ -334,65 +337,7 @@ class DBase:
             if abs(self.active_areas[1].x) > abs(distance): 
                 self.motor_braker(stop)
                 #print(stop, self.x, self.y)
-                print("task done", self.active_areas[1].x, distance)
-                break
-    
-    def straight_g(distance, angle, terminal_speed: Number = 50, speed = 500, Area_N: int = 0):
-        """
-        extra precise straight movement
-        
-        Parameters:
-            - terminal_speed: Number - in deg/s
-            - skippable: bool
-            - speed: Number - in deg/s
-            - taks: object - this is a looppart function that you would like to incorporate into this function (eg. print() -> print ; and it'll start printing empti lines every turn)
-        
-        uses: accelerator, motor_controler, motor_driver, clamp, absclamp
-        """
-
-        #setup
-        g_cons = 20 # gyrocorector constant (its not recomended to set below 2 and above 50)
-        corector_cons = 10 * direction
-        terminal_speed = clamp(terminal_speed, 1000, 50)
-        stop = terminal_speed == 50
-        start_angle = self.active_areas[Area_N].angle
-        direction = clamp(direction, 1, -1)
-        x_shift = (x - self.active_areas[Area_N].x)*direction
-        y_shift = (y - self.active_areas[Area_N].y)
-        self.start_motor_angle = self.Lw.angle()
-        print("navigation running")
-        
-        #print(self.x, self.y, x_shift, y_shift)
-        
-        #trajectory calculator
-        track_angle = angle_mod(degrees(atan2(y_shift, x_shift)))
-        #if direction == 0:
-        #    direction = sign(90 - abs(angle_mod(track_angle - start_angle)), zero=False)
-        track_angle = track_angle * direction
-        distance = sqrt(x_shift**2 + y_shift**2)*direction
-        if distance == 0:
-            print("start=cíl")
-            return None 
-        motor_angle = (distance*360/ (2*pi*self.wheel_radius))
-        self.active_areas[1].dir_reset(track_angle)
-        self.average_motor_speed = (self.Lw.speed() + self.Rw.speed()) / 2
-        
-        self.locate()
-        print("to travel: ", x, y, " distance: ", distance, " ang: ", track_angle)
-        print("i_ang: ", self.active_areas[1].i_angle, "  angle1: ", self.active_areas[1].angle, "angle0: ", self.active_areas[0].angle)
-
-        while True:
-            self.locate()
-            #print("actual position: ", self.active_areas[0].x, self.active_areas[0].y, "  angle: ", self.active_areas[0].angle)
-            self.speed_calculator(motor_angle, speed, terminal_speed, g_cons, corector_cons)
-            #print("L_speed: ", self.L_speed, "  R_speed: ", self.R_speed, " X: ", self.active_areas[1].x, "  Y: ", self.active_areas[1].y, "  angle: ", self.active_areas[1].angle)
-            self.motor_driver(self.L_speed, self.R_speed)
-
-            #motor breaker
-            if abs(self.active_areas[1].x) > abs(distance): 
-                self.motor_braker(stop)
-                #print(stop, self.x, self.y)
-                print("task done", self.active_areas[1].x, distance)
+                print("task done, on abs_pos: ", self.active_areas[0].pos(), "rel: ", self.active_areas[Area_N].pos(), " / ", [x, y])
                 break
 
 
@@ -407,17 +352,23 @@ class DBase:
 
         self.straight_position(x2, y2)
 
-    def area_driver(self, area: Area, magnification, speed = 500):
+    def area_driver(self, start, area: Area, magnification, speed = 500):
         """
         - this function is used to drive the robot in the area
         - it uses the active_areas[area_N] to get the position and angle
         - it uses the speed parameter to set the speed of the robot
         """
-        n_area_N = len(self.active_areas) # this is used to get the index of the area
+        #print(area)
+        print()
+        print()
         print(area)
+        self.straight_position(start[0], start[1], 1)
+        n_area_N = len(self.active_areas) # this is used to get the index of the area
         self.active_areas.append(area)
         self.locate()
-        self.active_areas[n_area_N].dir_reset(self.active_areas[0].angle) #not shure
+        act_pos = self.active_areas[0].pos()
+        self.active_areas[n_area_N].set_pos(act_pos[0] - start[0], act_pos[1] - start[1], start[2])
+        self.active_areas[n_area_N].dir_reset(self.active_areas[0].angle - start[2]) #not shure
         for instruction in self.active_areas[n_area_N].instructions:
             if type(instruction) == list:
                 self.straight_position(instruction[0] * magnification, instruction[1] * magnification, 1, Area_N=n_area_N) #provizorní verze - nepotporuje komplexní instrukce
@@ -438,98 +389,100 @@ class DBase:
         areas_with_data: 0 - area; 1 - magnification
         """
         for area_data in areas_data:
-            print(areas_data)
-            print(area_data)
-            self.straight_position(area_data[0][0], area_data[0][1], 1)
-            self.area_driver(area_data[1], area_data[2])
+            #print(areas_data)
+            #print(area_data)
+            self.area_driver(area_data[0], area_data[1], area_data[2])
 
     def write(self, letters, mag):
         templates = []
         ch_N = 0
         for character in letters:
-            templates.append([[ch_N * 20 * mag, 0], abeceda[character], mag])
+            if character != " ":
+                templates.append([[ch_N * 20 * mag, 0, 0], abeceda[character], mag])
+                ch_N += 1
+
         self.set_driver(templates, speed=500)
 
 
 #areas
 #alfabet
 A = Area()
-A.instructions = ["down", [0, 20], [10, 20], [10, 0], [10, 10], [0, 10], "up"]
+A.instructions = ["down", [0, 20], [10, 20], [10, 0], [10, 10], [0, 10], "up", [0, 10]]
 
 B = Area()
-B.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 5], [0, 0], "up"]
+B.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 5], [0, 0], "up", [0, 10]]
 
 C = Area()
-C.instructions = [[10, 0], "down", [0, 0], [0, 20], [10, 20], "up"]
+C.instructions = [[10, 0], "down", [0, 0], [0, 20], [10, 20], "up", [0, 10]]
 
 D = Area()
-D.instructions = ["down", [0, 20], [10, 15], [10, 5], [0, 0], "up"]
+D.instructions = ["down", [0, 20], [10, 15], [10, 5], [0, 0], "up", [0, 10]]
 
 E = Area()
-E.instructions = ["down", [10, 0], [0, 0], [0, 10], [10, 10], [0, 10], [0, 20], [10, 20], "up"]
+E.instructions = ["down", [10, 0], [0, 0], [0, 10], [10, 10], [0, 10], [0, 20], [10, 20], "up", [0, 10]]
 
 F = Area()
-F.instructions = ["down", [0, 10], [10, 10], [0, 20], [10, 20], "up"]
+F.instructions = ["down", [0, 10], [10, 10], [0, 20], [10, 20], "up", [0, 10]]
 
 G = Area()
-G.instructions = [[5, 10], "down", [10, 10], [10, 0], [0, 0], [0, 20], [10, 20], "up"]
+G.instructions = [[5, 10], "down", [10, 10], [10, 0], [0, 0], [0, 20], [10, 20], "up", [0, 10]]
 
 H = Area()
-H.instructions = ["down", [0, 20], [0, 10], [10, 10], [10, 20], [10, 0], "up"]
+H.instructions = ["down", [0, 20], [0, 10], [10, 10], [10, 20], [10, 0], "up", [0, 10]]
 
 I = Area()
-I.instructions = ["down", [10, 0], [5, 0], [5, 20], [0, 20], [10, 20], "up"]
+I.instructions = ["down", [10, 0], [5, 0], [5, 20], [0, 20], [10, 20], "up", [0, 10]]
 
 J = Area()
-J.instructions = [[0, 5], "down", [0, 0], [10, 0], [10, 20], [0, 20], "up"]
+J.instructions = [[0, 5], "down", [0, 0], [10, 0], [10, 20], [0, 20], "up", [0, 10]]
 
 K = Area()
-K.instructions = ["down", [0, 20], [0, 10], [10, 20], [0, 10], [10, 0], "up"]
+K.instructions = ["down", [0, 20], [0, 10], [10, 20], [0, 10], [10, 0], "up", [0, 10]]
 
 L = Area()
-L.instructions = [[0, 20], "down", [0, 0], [10, 0], "up"]
+L.instructions = [[0, 20], "down", [0, 0], [10, 0], "up", [0, 10]]
 
 M = Area()
-M.instructions = ["down", [0, 20], [5, 10], [10, 20], [10, 0], "up"]
+M.instructions = ["down", [0, 20], [5, 10], [10, 20], [10, 0], "up", [0, 10]]
 
 N = Area()
-N.instructions = ["down", [0, 20], [10, 0], [10, 20], "up"]
+N.instructions = ["down", [0, 20], [10, 0], [10, 20], "up", [0, 10]]
 
 O = Area()
-O.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], "up"]
+O.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], "up", [0, 10]]
 
 P = Area()
-P.instructions = ["down", [0, 20], [10, 15], [0, 10], "up"]
+P.instructions = ["down", [0, 20], [10, 15], [0, 10], "up", [0, 10]]
 
 Q = Area()
-Q.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], [5, 0], [10, -5], "up"]
+Q.instructions = ["down", [0, 20], [10, 20], [10, 0], [0, 0], [5, 0], [10, -5], "up", [0, 10]]
 
 R = Area()
-R.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 0], "up"]
+R.instructions = ["down", [0, 20], [10, 15], [0, 10], [10, 0], "up", [0, 10]]
 
 S = Area()
-S.instructions = ["down", [10, 0], [10, 10], [0, 10], [0, 20], [10, 20], "up"]
+S.instructions = ["down", [10, 0], [10, 10], [0, 10], [0, 20], [10, 20], "up", [0, 10]]
 
 T = Area()
-T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up"]
+T.instructions = [[0, 20], "down", [10, 20], [5, 20], [5, 0], "up", [0, 10]]
 
 U = Area()
-U.instructions = [[0, 20], "down", [0, 0], [10, 0], [10, 20], "up"]
+U.instructions = [[0, 20], "down", [0, 0], [10, 0], [10, 20], "up", [0, 10]]
 
 V = Area()
-V.instructions = [[0, 20], "down", [5, 0], [10, 20], "up"]
+V.instructions = [[0, 20], "down", [5, 0], [10, 20], "up", [0, 10]]
 
 W = Area()
-W.instructions = [[0, 20], "down", [2, 0], [5, 20], [8, 0], [10, 20], "up"]
+W.instructions = [[0, 20], "down", [2, 0], [5, 20], [8, 0], [10, 20], "up", [0, 10]]
 
 X = Area()
-X.instructions = ["down", [10, 20], "up", [0, 20], "down", [10, 0], "up"]
+X.instructions = ["down", [10, 20], "up", [0, 20], "down", [10, 0], "up", [0, 10]]
 
 Y = Area()
-Y.instructions = [[0, 20], "down", [5, 10], [5, 0], [5, 10], [10, 20], "up"]
+Y.instructions = [[0, 20], "down", [5, 10], [5, 0], [5, 10], [10, 20], "up", [0, 10]]
 
 Z = Area()
-Z.instructions = [[0, 20], "down", [10, 20], [0, 0], [10, 0], "up"]
+Z.instructions = [[0, 20], "down", [10, 20], [0, 0], [10, 0], "up", [0, 10]]
 
 abeceda = {"A": A, "B": B, "C": C, "D": D, "E": E, "F": F, "G": G, "H": H, "I": I, "J": J, "K": K, "L": L, "M": M, "N": N, "O": O, "P": P, "Q": Q, "R": R, "S": S, "T": T, "U": U, "V": V, "W": W, "X": X, "Y": Y, "Z": Z}
 #Area nistruction set
@@ -551,7 +504,7 @@ drive = DBase(hub, Lw, Rw, Pw)
 drive.add_gyro(gyro1)
 drive.add_gyro(gyro2)
 
-drive.write("EVE", 5)
+drive.write("PROTAB", 3)
 #drive.set_driver(protab_set, speed=500)
 #drive.area_driver(letter_B, 5, speed=500)
 
